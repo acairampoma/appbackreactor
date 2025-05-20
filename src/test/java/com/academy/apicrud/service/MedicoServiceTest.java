@@ -822,4 +822,41 @@ public class MedicoServiceTest {
         Mockito.verify(medicoRepository, Mockito.never()).findByNombreAndEspecialidadIdOrderByIdAsc(
                 Mockito.anyString(), Mockito.anyLong(), Mockito.anyInt(), Mockito.anyLong());
     }
+
+    @Test
+    @DisplayName("Obtener médicos paginados - Sin filtros con nombre vacío")
+    @Story("Obtener médicos paginados")
+    @Description("Debe usar el método sin filtros cuando nombre está vacío y especialidadId es nulo")
+    public void getMedicosPaginados_EmptyNameNoFilters() {
+        // Arrange (Given)
+        String nombre = ""; // Nombre vacío, no nulo
+        Long especialidadId = null;
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id"));
+        
+        List<Medico> medicos = new ArrayList<>();
+        medicos.add(medico);
+        
+        // Verificar explícitamente que se llama al método sin filtros
+        Mockito.when(medicoRepository.findAllPagedOrderByIdAsc(10, 0))
+                .thenReturn(Flux.fromIterable(medicos));
+        
+        Mockito.when(medicoMapper.toDto(Mockito.any(Medico.class)))
+                .thenReturn(medicoDto);
+        
+        // Act (When)
+        Mono<PageResponseDto<MedicoDto>> result = medicoService.getMedicosPaginados(nombre, especialidadId, pageable);
+        
+        // Assert (Then)
+        StepVerifier.create(result)
+                .assertNext(page -> {
+                    assertEquals(1, page.getContent().size());
+                    assertEquals(medicoDto, page.getContent().get(0));
+                })
+                .verifyComplete();
+        
+        // Verificar que se llamó al método sin filtros y no al método con filtros
+        Mockito.verify(medicoRepository).findAllPagedOrderByIdAsc(10, 0);
+        Mockito.verify(medicoRepository, Mockito.never()).findByNombreAndEspecialidadIdOrderByIdAsc(
+                Mockito.anyString(), Mockito.anyLong(), Mockito.anyInt(), Mockito.anyLong());
+    }
 }
