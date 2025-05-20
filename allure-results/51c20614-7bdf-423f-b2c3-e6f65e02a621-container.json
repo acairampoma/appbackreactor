@@ -1,0 +1,1 @@
+{"uuid":"51c20614-7bdf-423f-b2c3-e6f65e02a621","name":"testDeleteUsuario_NotFound()","children":["8cd04c61-a638-419d-973c-84d0aa16dac5"],"befores":[{"name":"setUp","status":"passed","stage":"finished","steps":[],"attachments":[],"parameters":[],"start":1720331708946,"stop":1720331708947}],"afters":[],"links":[],"start":1720331708944,"stop":1720331708952}

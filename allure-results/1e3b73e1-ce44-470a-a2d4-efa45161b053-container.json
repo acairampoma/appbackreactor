@@ -1,0 +1,1 @@
+{"uuid":"1e3b73e1-ce44-470a-a2d4-efa45161b053","name":"testGetUsuarios_ServiceException()","children":["405ce49f-1342-4aa1-86c8-ac23b8779a15"],"befores":[{"name":"setUp","status":"passed","stage":"finished","steps":[],"attachments":[],"parameters":[],"start":1720340879849,"stop":1720340879849}],"afters":[],"start":1720340879844,"stop":1720340879863}

@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "nombre": "Dr. Juan Pérez",
+    "especialidadId": 1
+  },
+  {
+    "id": 2,
+    "nombre": "Dra. María López",
+    "especialidadId": 2
+  },
+  {
+    "id": 3,
+    "nombre": "Dr. Carlos Rodríguez",
+    "especialidadId": 3
+  },
+  {
+    "id": 4,
+    "nombre": "Dra. Ana Martínez",
+    "especialidadId": 1
+  }
+]

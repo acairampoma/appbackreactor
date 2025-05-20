@@ -1,0 +1,1 @@
+{"uuid":"cd82f309-cef2-4231-9d21-85a698021c0e","name":"testUpdateUsuarioEstado_Success_Activated()","children":["38f2d01f-185e-4cf0-a929-52e886f4864b"],"befores":[{"name":"setUp","status":"passed","stage":"finished","steps":[],"attachments":[],"parameters":[],"start":1720330630363,"stop":1720330630363}],"afters":[],"links":[],"start":1720330630360,"stop":1720330630370}

@@ -1,0 +1,1 @@
+{"uuid":"700376f6-3273-41a8-bda4-1dddedcd90a0","name":"testUpdateUsuarioEstado_ValidState_Activated()","children":["70ff46a0-9ce9-4ca6-9bdb-b19303942983"],"befores":[{"name":"setUp","status":"passed","stage":"finished","steps":[],"attachments":[],"parameters":[],"start":1720330630577,"stop":1720330630578}],"afters":[],"links":[],"start":1720330630576,"stop":1720330630581}

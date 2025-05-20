@@ -1,0 +1,1 @@
+{"uuid":"245b154c-ca10-4c20-b4bc-7bd5503d1ae5","name":"testGetUsuarios_DTOValidation()","children":["c3ab63fc-47aa-4205-908d-85e7a8d4286d"],"befores":[{"name":"setUp","status":"passed","stage":"finished","steps":[],"attachments":[],"parameters":[],"start":1720340809073,"stop":1720340809073}],"afters":[],"start":1720340809070,"stop":1720340809082}

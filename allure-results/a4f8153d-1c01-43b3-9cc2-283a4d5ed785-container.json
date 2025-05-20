@@ -1,0 +1,1 @@
+{"uuid":"a4f8153d-1c01-43b3-9cc2-283a4d5ed785","name":"testGetUsuarios_NombreEstadoNoNulos()","children":["07710d43-969c-43cd-a4c1-f1598904b54a"],"befores":[{"name":"setUp","status":"passed","stage":"finished","steps":[],"attachments":[],"parameters":[],"start":1720330630272,"stop":1720330630273}],"afters":[],"links":[],"start":1720330630268,"stop":1720330630283}

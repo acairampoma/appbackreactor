@@ -1,0 +1,1 @@
+{"uuid":"f5008388-9ed7-4c9f-a87b-c102386ad35a","name":"testValidateSearchParameters_ValidState_Null()","children":["64692516-0a34-48fa-9ae9-89aa15de3f8e"],"befores":[{"name":"setUp","status":"passed","stage":"finished","steps":[],"attachments":[],"parameters":[],"start":1720334052773,"stop":1720334052774}],"afters":[],"links":[],"start":1720334052687,"stop":1720334052779}
