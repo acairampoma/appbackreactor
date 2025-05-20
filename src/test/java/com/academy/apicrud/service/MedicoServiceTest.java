@@ -765,4 +765,24 @@ public class MedicoServiceTest {
                 })
                 .verifyComplete();
     }
+
+    @Test
+    @DisplayName("Obtener médicos paginados - Error durante la consulta")
+    @Story("Obtener médicos paginados")
+    @Description("Debe manejar correctamente los errores durante la consulta de médicos paginados")
+    public void getMedicosPaginados_Error() {
+        // Arrange (Given)
+        String nombre = null;
+        Long especialidadId = null;
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id"));
+        
+        Mockito.when(medicoRepository.findAllPagedOrderByIdAsc(10, 0))
+                .thenReturn(Flux.error(new RuntimeException("Error de base de datos")));
+        
+        // Act & Assert (When & Then)
+        StepVerifier.create(medicoService.getMedicosPaginados(nombre, especialidadId, pageable))
+                .expectErrorMatches(throwable -> throwable instanceof RuntimeException && 
+                                  throwable.getMessage().equals("Error de base de datos"))
+                .verify();
+    }
 }
