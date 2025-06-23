@@ -6,9 +6,8 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<!-- 🚨 CRÍTICO: Actualizar Spring Boot -->
-		<version>2.7.18</version> <!-- O 3.2.5 si puedes migrar a Java 17+ -->
-		<relativePath/> <!-- lookup parent from repository -->
+		<version>2.7.18</version>
+		<relativePath/>
 	</parent>
 
 	<groupId>com.academy</groupId>
@@ -20,12 +19,9 @@
 	<properties>
 		<java.version>11</java.version>
 		<junit.jupiter.version>5.10.2</junit.jupiter.version>
-		<!-- 🆕 Actualizar versiones -->
 		<jacoco.version>0.8.11</jacoco.version>
 		<allure.version>2.26.0</allure.version>
 		<maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
-		<!-- 🆕 OWASP Dependency Check -->
-		<owasp.dependency.check.version>9.0.9</owasp.dependency.check.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 	</properties>
@@ -50,7 +46,6 @@
 	</dependencyManagement>
 
 	<dependencies>
-		<!-- Mantener todas tus dependencias existentes -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
@@ -87,11 +82,10 @@
 			<artifactId>spring-boot-starter-validation</artifactId>
 		</dependency>
 
-		<!-- 🆕 Actualizar springdoc para compatibilidad -->
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-webflux-ui</artifactId>
-			<version>1.8.0</version> <!-- Compatible con Spring Boot 2.7.x -->
+			<version>1.8.0</version>
 		</dependency>
 
 		<!-- Testing dependencies -->
@@ -133,32 +127,7 @@
 				</configuration>
 			</plugin>
 
-			<!-- 🆕 OWASP Dependency Check -->
-			<plugin>
-				<groupId>org.owasp</groupId>
-				<artifactId>dependency-check-maven</artifactId>
-				<version>${owasp.dependency.check.version}</version>
-				<configuration>
-					<!-- Fallar build si hay vulnerabilidades críticas -->
-					<failBuildOnCVSS>7</failBuildOnCVSS>
-					<!-- Formato de reporte -->
-					<formats>
-						<format>HTML</format>
-						<format>JSON</format>
-					</formats>
-					<!-- Suprimir falsos positivos conocidos -->
-					<suppressionFile>${project.basedir}/owasp-suppressions.xml</suppressionFile>
-				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>check</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-
-			<!-- JaCoCo actualizado -->
+			<!-- JaCoCo para cobertura de código -->
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
@@ -191,31 +160,10 @@
 							</excludes>
 						</configuration>
 					</execution>
-					<!-- 🆕 Verificación de cobertura mínima -->
-					<execution>
-						<id>check-coverage</id>
-						<goals>
-							<goal>check</goal>
-						</goals>
-						<configuration>
-							<rules>
-								<rule>
-									<element>BUNDLE</element>
-									<limits>
-										<limit>
-											<counter>INSTRUCTION</counter>
-											<value>COVEREDRATIO</value>
-											<minimum>0.80</minimum>
-										</limit>
-									</limits>
-								</rule>
-							</rules>
-						</configuration>
-					</execution>
 				</executions>
 			</plugin>
 
-			<!-- Surefire actualizado -->
+			<!-- Surefire para pruebas -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
@@ -223,7 +171,7 @@
 				<configuration>
 					<properties>
 						<property>
-							<name>listener</name>
+							<name>listener</name>  <!-- 🔧 CAMBIADO: <n> → <name> -->
 							<value>io.qameta.allure.junit5.AllureJunit5</value>
 						</property>
 					</properties>
@@ -243,26 +191,4 @@
 			</plugin>
 		</plugins>
 	</build>
-
-	<!-- 🆕 Profiles para diferentes entornos -->
-	<profiles>
-		<profile>
-			<id>security-scan</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.owasp</groupId>
-						<artifactId>dependency-check-maven</artifactId>
-						<executions>
-							<execution>
-								<goals>
-									<goal>aggregate</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
 </project>

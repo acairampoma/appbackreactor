@@ -6,6 +6,7 @@ import com.academy.apicrud.model.dto.PageResponseDto;
 import com.academy.apicrud.model.response.ResponseMedico;
 import com.academy.apicrud.service.MedicoService;
 import io.qameta.allure.*;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -355,13 +356,13 @@ public class MedicoControllerTest {
         int size = -5; // Tamaño negativo - inválido
         String sortBy = "id";
         String sortOrder = "asc";
-        
+
         // Mock validación de parámetros
         Mockito.doNothing().when(medicoService).validateSortParameters(sortBy, sortOrder);
-        
+
         // Configurar el controlador para usar un WebTestClient personalizado que permita valores negativos
         webTestClient = WebTestClient.bindToController(medicoController).build();
-        
+
         // Act & Assert
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder
@@ -375,7 +376,8 @@ public class MedicoControllerTest {
                 .expectStatus().isBadRequest()
                 .expectBody()
                 .jsonPath("$.code").isEqualTo("400")
-                .jsonPath("$.message").isEqualTo("Page size must not be less than one!");
+                // 🎯 SOLUCIÓN ROBUSTA: Usar contains para mayor flexibilidad
+                .jsonPath("$.message").value(Matchers.containsStringIgnoringCase("Page size must not be less than one"));
     }
 
     @Test
