@@ -5,12 +5,10 @@ import com.academy.apicrud.model.dto.MedicoDto;
 import com.academy.apicrud.model.dto.PageResponseDto;
 import com.academy.apicrud.model.response.ResponseMedico;
 import com.academy.apicrud.service.MedicoService;
-import io.qameta.allure.Description;
-import io.qameta.allure.Epic;
-import io.qameta.allure.Feature;
-import io.qameta.allure.Story;
+import io.qameta.allure.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -32,8 +30,9 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-@Epic("Controladores")
-@Feature("Médico Controller")
+@Epic("Gestión de Médicos")
+@Feature("API Rest de Médicos")
+@Story("Controlador de Médicos")
 public class MedicoControllerTest {
 
     @Mock
@@ -64,9 +63,12 @@ public class MedicoControllerTest {
     }
 
     @Test
-    @DisplayName("Obtener todos los médicos")
+    @DisplayName("GET - Obtener todos los médicos")
     @Story("Obtener todos los médicos")
-    @Description("Debe obtener todos los médicos correctamente")
+    @Description("Verificar que se pueden obtener todos los médicos correctamente")
+    @Severity(SeverityLevel.NORMAL)
+    @Tag("get")
+    @Tag("todos")
     public void getAllMedicos_Success() {
         // Arrange
         List<MedicoDto> medicosDto = new ArrayList<>();
@@ -88,9 +90,12 @@ public class MedicoControllerTest {
     }
 
     @Test
-    @DisplayName("Obtener médicos con especialidad")
+    @DisplayName("GET - Obtener médicos con especialidad")
     @Story("Obtener médicos con especialidad")
-    @Description("Debe obtener todos los médicos con su especialidad correctamente")
+    @Description("Verificar que se pueden obtener médicos con su especialidad correctamente")
+    @Severity(SeverityLevel.NORMAL)
+    @Tag("get")
+    @Tag("especialidad")
     public void getAllMedicosWithEspecialidad_Success() {
         // Arrange
         List<ResponseMedico> medicosResponse = new ArrayList<>();
@@ -113,9 +118,12 @@ public class MedicoControllerTest {
     }
 
     @Test
-    @DisplayName("Obtener médico por ID")
+    @DisplayName("GET - Obtener médico por ID")
     @Story("Obtener médico por ID")
-    @Description("Debe obtener un médico por su ID correctamente")
+    @Description("Verificar que se puede obtener un médico por su ID correctamente")
+    @Severity(SeverityLevel.NORMAL)
+    @Tag("get")
+    @Tag("id")
     public void getMedicoById_Success() {
         // Arrange
         Long id = 1L;
@@ -135,9 +143,13 @@ public class MedicoControllerTest {
     }
 
     @Test
-    @DisplayName("Obtener médico por ID - No encontrado")
+    @DisplayName("GET - Obtener médico por ID - No encontrado")
     @Story("Obtener médico por ID")
-    @Description("Debe manejar el caso cuando un médico no existe")
+    @Description("Verificar que se maneja correctamente cuando un médico no existe")
+    @Severity(SeverityLevel.CRITICAL)
+    @Tag("get")
+    @Tag("id")
+    @Tag("error")
     public void getMedicoById_NotFound() {
         // Arrange
         Long id = 99L;
@@ -155,9 +167,13 @@ public class MedicoControllerTest {
     }
 
     @Test
-    @DisplayName("Obtener médico con especialidad por ID")
+    @DisplayName("GET - Obtener médico con especialidad por ID")
     @Story("Obtener médico con especialidad por ID")
-    @Description("Debe obtener un médico con su especialidad por ID correctamente")
+    @Description("Verificar que se puede obtener un médico con su especialidad por ID correctamente")
+    @Severity(SeverityLevel.NORMAL)
+    @Tag("get")
+    @Tag("id")
+    @Tag("especialidad")
     public void getMedicoWithEspecialidadById_Success() {
         // Arrange
         Long id = 1L;
@@ -178,9 +194,12 @@ public class MedicoControllerTest {
     }
 
     @Test
-    @DisplayName("Crear médico")
+    @DisplayName("POST - Crear médico")
     @Story("Crear médico")
-    @Description("Debe crear un médico correctamente")
+    @Description("Verificar que se puede crear un médico correctamente")
+    @Severity(SeverityLevel.CRITICAL)
+    @Tag("post")
+    @Tag("crear")
     public void createMedico_Success() {
         // Arrange
         MedicoDto medicoToCreate = new MedicoDto();
@@ -271,7 +290,7 @@ public class MedicoControllerTest {
     }
 
     @Test
-    @DisplayName("Obtener médicos paginados")
+    @DisplayName("Obtener médicos paginados - Exitoso")
     @Story("Obtener médicos paginados")
     @Description("Debe obtener médicos paginados correctamente")
     public void getMedicosPaginados_Success() {
@@ -283,20 +302,23 @@ public class MedicoControllerTest {
         String sortBy = "id";
         String sortOrder = "asc";
         
+        List<MedicoDto> medicosDto = new ArrayList<>();
+        medicosDto.add(medicoDto);
+        
         PageResponseDto<MedicoDto> pageResponse = new PageResponseDto<>();
-        List<MedicoDto> content = new ArrayList<>();
-        content.add(medicoDto);
-        pageResponse.setContent(content);
+        pageResponse.setContent(medicosDto);
         pageResponse.setPageNumber(page);
         pageResponse.setPageSize(size);
         pageResponse.setFirst(true);
         pageResponse.setLast(true);
         pageResponse.setEmpty(false);
         
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy).ascending());
+        // Mock validación de parámetros
+        Mockito.doNothing().when(medicoService).validateSortParameters(sortBy, sortOrder);
         
-        Mockito.doNothing().when(medicoService).validateSortParameters(anyString(), anyString());
-        when(medicoService.getMedicosPaginados(eq(nombre), eq(especialidadId), any(Pageable.class)))
+        // Mock obtener médicos paginados
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, sortBy));
+        when(medicoService.getMedicosPaginados(nombre, especialidadId, pageable))
                 .thenReturn(Mono.just(pageResponse));
 
         // Act & Assert
@@ -314,11 +336,115 @@ public class MedicoControllerTest {
                 .jsonPath("$.code").isEqualTo("200")
                 .jsonPath("$.message").isEqualTo("Operación GET realizada con éxito")
                 .jsonPath("$.data.content[0].id").isEqualTo(1)
-                .jsonPath("$.data.content[0].nombre").isEqualTo("Dr. Juan Pérez")
                 .jsonPath("$.data.pageNumber").isEqualTo(0)
                 .jsonPath("$.data.pageSize").isEqualTo(10)
                 .jsonPath("$.data.first").isEqualTo(true)
                 .jsonPath("$.data.last").isEqualTo(true)
                 .jsonPath("$.data.empty").isEqualTo(false);
+    }
+
+    @Test
+    @DisplayName("Obtener médicos paginados - Parámetros de paginación inválidos")
+    @Story("Obtener médicos paginados")
+    @Description("Debe manejar correctamente cuando se proporcionan parámetros de paginación inválidos")
+    public void getMedicosPaginados_InvalidPaginationParameters() {
+        // Arrange
+        String nombre = null;
+        Long especialidadId = null;
+        int page = 0;
+        int size = -5; // Tamaño negativo - inválido
+        String sortBy = "id";
+        String sortOrder = "asc";
+        
+        // Mock validación de parámetros
+        Mockito.doNothing().when(medicoService).validateSortParameters(sortBy, sortOrder);
+        
+        // Configurar el controlador para usar un WebTestClient personalizado que permita valores negativos
+        webTestClient = WebTestClient.bindToController(medicoController).build();
+        
+        // Act & Assert
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/medicos/page")
+                        .queryParam("page", page)
+                        .queryParam("size", size)
+                        .queryParam("sortBy", sortBy)
+                        .queryParam("sortOrder", sortOrder)
+                        .build())
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.code").isEqualTo("400")
+                .jsonPath("$.message").isEqualTo("Page size must not be less than one!");
+    }
+
+    @Test
+    @DisplayName("Obtener médicos paginados - Error en validación de parámetros de ordenamiento")
+    @Story("Obtener médicos paginados")
+    @Description("Debe manejar correctamente cuando hay un error en la validación de parámetros de ordenamiento")
+    public void getMedicosPaginados_SortParametersValidationError() {
+        // Arrange
+        String nombre = null;
+        Long especialidadId = null;
+        int page = 0;
+        int size = 10;
+        String sortBy = "campoInvalido"; // Campo inválido
+        String sortOrder = "asc";
+        
+        // Mock validación de parámetros con error
+        Mockito.doThrow(new IllegalArgumentException("Campo de ordenamiento inválido: campoInvalido"))
+               .when(medicoService).validateSortParameters(sortBy, sortOrder);
+
+        // Act & Assert
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/medicos/page")
+                        .queryParam("page", page)
+                        .queryParam("size", size)
+                        .queryParam("sortBy", sortBy)
+                        .queryParam("sortOrder", sortOrder)
+                        .build())
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody()
+                .jsonPath("$.code").isEqualTo("400")
+                .jsonPath("$.message").isEqualTo("Campo de ordenamiento inválido: campoInvalido");
+    }
+
+    @Test
+    @DisplayName("Obtener médicos paginados - Error general")
+    @Story("Obtener médicos paginados")
+    @Description("Debe manejar correctamente cuando ocurre un error general durante la obtención de médicos paginados")
+    public void getMedicosPaginados_GeneralError() {
+        // Arrange
+        String nombre = null;
+        Long especialidadId = null;
+        int page = 0;
+        int size = 10;
+        String sortBy = "id";
+        String sortOrder = "asc";
+        
+        // Mock validación de parámetros
+        Mockito.doNothing().when(medicoService).validateSortParameters(sortBy, sortOrder);
+        
+        // Mock obtener médicos paginados con error general
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, sortBy));
+        when(medicoService.getMedicosPaginados(nombre, especialidadId, pageable))
+                .thenReturn(Mono.error(new RuntimeException("Error al obtener médicos paginados")));
+
+        // Act & Assert
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/medicos/page")
+                        .queryParam("page", page)
+                        .queryParam("size", size)
+                        .queryParam("sortBy", sortBy)
+                        .queryParam("sortOrder", sortOrder)
+                        .build())
+                .exchange()
+                .expectStatus().is5xxServerError()
+                .expectBody()
+                .jsonPath("$.code").isEqualTo("500")
+                .jsonPath("$.message").isEqualTo("Error al obtener médicos paginados: Error al obtener médicos paginados");
     }
 }

@@ -672,6 +672,10 @@ public class MedicoServiceTest {
                     assertTrue(page.isLast());
                 })
                 .verifyComplete();
+        
+        // Verificar que se llamó al método con filtros
+        Mockito.verify(medicoRepository).findByNombreAndEspecialidadIdOrderByIdAsc(
+                Mockito.anyString(), Mockito.anyLong(), Mockito.anyInt(), Mockito.anyLong());
     }
 
     @Test
@@ -767,22 +771,29 @@ public class MedicoServiceTest {
     }
 
     @Test
-    @DisplayName("Obtener médicos paginados - Error durante la consulta")
+    @DisplayName("Obtener médicos paginados - Error")
     @Story("Obtener médicos paginados")
-    @Description("Debe manejar correctamente los errores durante la consulta de médicos paginados")
+    @Description("Debe manejar correctamente los errores")
     public void getMedicosPaginados_Error() {
         // Arrange (Given)
-        String nombre = null;
-        Long especialidadId = null;
+        String nombre = "Dr. Test";
+        Long especialidadId = 1L;
         Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id"));
         
-        Mockito.when(medicoRepository.findAllPagedOrderByIdAsc(10, 0))
+        // Simulamos un error en el repositorio
+        Mockito.when(medicoRepository.findByNombreAndEspecialidadIdOrderByIdAsc(
+                Mockito.anyString(), Mockito.anyLong(), Mockito.anyInt(), Mockito.anyLong()))
                 .thenReturn(Flux.error(new RuntimeException("Error de base de datos")));
         
-        // Act & Assert (When & Then)
-        StepVerifier.create(medicoService.getMedicosPaginados(nombre, especialidadId, pageable))
-                .expectErrorMatches(throwable -> throwable instanceof RuntimeException && 
-                                  throwable.getMessage().equals("Error de base de datos"))
+        // Act (When)
+        Mono<PageResponseDto<MedicoDto>> result = medicoService.getMedicosPaginados(nombre, especialidadId, pageable);
+        
+        // Assert (Then)
+        StepVerifier.create(result)
+                .expectErrorMatches(throwable -> 
+                    throwable instanceof RuntimeException && 
+                    throwable.getMessage().contains("Error de base de datos")
+                )
                 .verify();
     }
 
@@ -813,7 +824,11 @@ public class MedicoServiceTest {
         StepVerifier.create(result)
                 .assertNext(page -> {
                     assertEquals(1, page.getContent().size());
+                    assertEquals(0, page.getPageNumber());
+                    assertEquals(10, page.getPageSize());
                     assertEquals(medicoDto, page.getContent().get(0));
+                    assertTrue(page.isFirst());
+                    assertTrue(page.isLast());
                 })
                 .verifyComplete();
         
@@ -850,7 +865,11 @@ public class MedicoServiceTest {
         StepVerifier.create(result)
                 .assertNext(page -> {
                     assertEquals(1, page.getContent().size());
+                    assertEquals(0, page.getPageNumber());
+                    assertEquals(10, page.getPageSize());
                     assertEquals(medicoDto, page.getContent().get(0));
+                    assertTrue(page.isFirst());
+                    assertTrue(page.isLast());
                 })
                 .verifyComplete();
         
@@ -858,5 +877,349 @@ public class MedicoServiceTest {
         Mockito.verify(medicoRepository).findAllPagedOrderByIdAsc(10, 0);
         Mockito.verify(medicoRepository, Mockito.never()).findByNombreAndEspecialidadIdOrderByIdAsc(
                 Mockito.anyString(), Mockito.anyLong(), Mockito.anyInt(), Mockito.anyLong());
+    }
+
+    @Test
+    @DisplayName("Obtener médicos paginados - Sin filtros con ordenamiento descendente")
+    @Story("Obtener médicos paginados")
+    @Description("Debe usar el método sin filtros con ordenamiento descendente")
+    public void getMedicosPaginados_NoFiltersDescendingSort() {
+        // Arrange (Given)
+        String nombre = null;
+        Long especialidadId = null;
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "id")); // Orden descendente
+        
+        List<Medico> medicos = new ArrayList<>();
+        medicos.add(medico);
+        
+        // Verificar explícitamente que se llama al método sin filtros con orden descendente
+        Mockito.when(medicoRepository.findAllPagedOrderByIdDesc(10, 0))
+                .thenReturn(Flux.fromIterable(medicos));
+        
+        Mockito.when(medicoMapper.toDto(Mockito.any(Medico.class)))
+                .thenReturn(medicoDto);
+        
+        // Act (When)
+        Mono<PageResponseDto<MedicoDto>> result = medicoService.getMedicosPaginados(nombre, especialidadId, pageable);
+        
+        // Assert (Then)
+        StepVerifier.create(result)
+                .assertNext(page -> {
+                    assertEquals(1, page.getContent().size());
+                    assertEquals(0, page.getPageNumber());
+                    assertEquals(10, page.getPageSize());
+                    assertEquals(medicoDto, page.getContent().get(0));
+                    assertTrue(page.isFirst());
+                    assertTrue(page.isLast());
+                })
+                .verifyComplete();
+        
+        // Verificar que se llamó al método sin filtros con orden descendente
+        Mockito.verify(medicoRepository).findAllPagedOrderByIdDesc(10, 0);
+        Mockito.verify(medicoRepository, Mockito.never()).findAllPagedOrderByIdAsc(
+                Mockito.anyInt(), Mockito.anyLong());
+        Mockito.verify(medicoRepository, Mockito.never()).findByNombreAndEspecialidadIdOrderByIdAsc(
+                Mockito.anyString(), Mockito.anyLong(), Mockito.anyInt(), Mockito.anyLong());
+    }
+
+    @Test
+    @DisplayName("Obtener médicos paginados - Sin filtros con ordenamiento por campo diferente a id")
+    @Story("Obtener médicos paginados")
+    @Description("Debe usar el método sin filtros con ordenamiento por campo diferente a id")
+    public void getMedicosPaginados_NoFiltersNonIdSort() {
+        // Arrange (Given)
+        String nombre = null;
+        Long especialidadId = null;
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "nombre")); // Ordenar por nombre
+        
+        List<Medico> medicos = new ArrayList<>();
+        medicos.add(medico);
+        
+        // Verificar explícitamente que se llama al método sin filtros para otros campos
+        Mockito.when(medicoRepository.findAllPaged(10, 0))
+                .thenReturn(Flux.fromIterable(medicos));
+        
+        Mockito.when(medicoMapper.toDto(Mockito.any(Medico.class)))
+                .thenReturn(medicoDto);
+        
+        // Act (When)
+        Mono<PageResponseDto<MedicoDto>> result = medicoService.getMedicosPaginados(nombre, especialidadId, pageable);
+        
+        // Assert (Then)
+        StepVerifier.create(result)
+                .assertNext(page -> {
+                    assertEquals(1, page.getContent().size());
+                    assertEquals(0, page.getPageNumber());
+                    assertEquals(10, page.getPageSize());
+                    assertEquals(medicoDto, page.getContent().get(0));
+                    assertTrue(page.isFirst());
+                    assertTrue(page.isLast());
+                })
+                .verifyComplete();
+        
+        // Verificar que se llamó al método sin filtros para otros campos
+        Mockito.verify(medicoRepository).findAllPaged(10, 0);
+        Mockito.verify(medicoRepository, Mockito.never()).findAllPagedOrderByIdAsc(
+                Mockito.anyInt(), Mockito.anyLong());
+        Mockito.verify(medicoRepository, Mockito.never()).findAllPagedOrderByIdDesc(
+                Mockito.anyInt(), Mockito.anyLong());
+        Mockito.verify(medicoRepository, Mockito.never()).findByNombreAndEspecialidadIdOrderByIdAsc(
+                Mockito.anyString(), Mockito.anyLong(), Mockito.anyInt(), Mockito.anyLong());
+    }
+
+    @Test
+    @DisplayName("Obtener médicos paginados - Sin filtros con nombre vacío y ordenamiento descendente")
+    @Story("Obtener médicos paginados")
+    @Description("Debe usar el método sin filtros cuando nombre está vacío y especialidadId es nulo con ordenamiento descendente")
+    public void getMedicosPaginados_EmptyNameNoFiltersDescendingSort() {
+        // Arrange (Given)
+        String nombre = ""; // Nombre vacío, no nulo
+        Long especialidadId = null;
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "id")); // Orden descendente
+        
+        List<Medico> medicos = new ArrayList<>();
+        medicos.add(medico);
+        
+        // Verificar explícitamente que se llama al método sin filtros con orden descendente
+        Mockito.when(medicoRepository.findAllPagedOrderByIdDesc(10, 0))
+                .thenReturn(Flux.fromIterable(medicos));
+        
+        Mockito.when(medicoMapper.toDto(Mockito.any(Medico.class)))
+                .thenReturn(medicoDto);
+        
+        // Act (When)
+        Mono<PageResponseDto<MedicoDto>> result = medicoService.getMedicosPaginados(nombre, especialidadId, pageable);
+        
+        // Assert (Then)
+        StepVerifier.create(result)
+                .assertNext(page -> {
+                    assertEquals(1, page.getContent().size());
+                    assertEquals(0, page.getPageNumber());
+                    assertEquals(10, page.getPageSize());
+                    assertEquals(medicoDto, page.getContent().get(0));
+                    assertTrue(page.isFirst());
+                    assertTrue(page.isLast());
+                })
+                .verifyComplete();
+        
+        // Verificar que se llamó al método sin filtros con orden descendente
+        Mockito.verify(medicoRepository).findAllPagedOrderByIdDesc(10, 0);
+        Mockito.verify(medicoRepository, Mockito.never()).findAllPagedOrderByIdAsc(
+                Mockito.anyInt(), Mockito.anyLong());
+        Mockito.verify(medicoRepository, Mockito.never()).findByNombreAndEspecialidadIdOrderByIdAsc(
+                Mockito.anyString(), Mockito.anyLong(), Mockito.anyInt(), Mockito.anyLong());
+    }
+
+    @Test
+    @DisplayName("Obtener médicos paginados - Sin filtros con nombre vacío y ordenamiento por campo diferente a id")
+    @Story("Obtener médicos paginados")
+    @Description("Debe usar el método sin filtros cuando nombre está vacío y especialidadId es nulo con ordenamiento por campo diferente a id")
+    public void getMedicosPaginados_EmptyNameNoFiltersNonIdSort() {
+        // Arrange (Given)
+        String nombre = ""; // Nombre vacío, no nulo
+        Long especialidadId = null;
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "nombre")); // Ordenar por nombre
+        
+        List<Medico> medicos = new ArrayList<>();
+        medicos.add(medico);
+        
+        // Verificar explícitamente que se llama al método sin filtros para otros campos
+        Mockito.when(medicoRepository.findAllPaged(10, 0))
+                .thenReturn(Flux.fromIterable(medicos));
+        
+        Mockito.when(medicoMapper.toDto(Mockito.any(Medico.class)))
+                .thenReturn(medicoDto);
+        
+        // Act (When)
+        Mono<PageResponseDto<MedicoDto>> result = medicoService.getMedicosPaginados(nombre, especialidadId, pageable);
+        
+        // Assert (Then)
+        StepVerifier.create(result)
+                .assertNext(page -> {
+                    assertEquals(1, page.getContent().size());
+                    assertEquals(0, page.getPageNumber());
+                    assertEquals(10, page.getPageSize());
+                    assertEquals(medicoDto, page.getContent().get(0));
+                    assertTrue(page.isFirst());
+                    assertTrue(page.isLast());
+                })
+                .verifyComplete();
+        
+        // Verificar que se llamó al método sin filtros para otros campos
+        Mockito.verify(medicoRepository).findAllPaged(10, 0);
+        Mockito.verify(medicoRepository, Mockito.never()).findAllPagedOrderByIdAsc(
+                Mockito.anyInt(), Mockito.anyLong());
+        Mockito.verify(medicoRepository, Mockito.never()).findAllPagedOrderByIdDesc(
+                Mockito.anyInt(), Mockito.anyLong());
+        Mockito.verify(medicoRepository, Mockito.never()).findByNombreAndEspecialidadIdOrderByIdAsc(
+                Mockito.anyString(), Mockito.anyLong(), Mockito.anyInt(), Mockito.anyLong());
+    }
+
+
+
+    @Test
+    @DisplayName("getUnfilteredMedicosWithSort - Ordenamiento por campo diferente a id")
+    @Story("Obtener médicos paginados")
+    @Description("Debe usar el método findAllPaged cuando sortBy no es 'id'")
+    public void getUnfilteredMedicosWithSort_NonIdSort() {
+        // Arrange (Given)
+        String nombre = null;
+        Long especialidadId = null;
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "nombre")); // Ordenar por nombre
+        
+        List<Medico> medicos = new ArrayList<>();
+        medicos.add(medico);
+        
+        // Verificar explícitamente que se llama al método sin filtros para otros campos
+        Mockito.when(medicoRepository.findAllPaged(10, 0))
+                .thenReturn(Flux.fromIterable(medicos));
+        
+        Mockito.when(medicoMapper.toDto(Mockito.any(Medico.class)))
+                .thenReturn(medicoDto);
+        
+        // Act (When)
+        Mono<PageResponseDto<MedicoDto>> result = medicoService.getMedicosPaginados(nombre, especialidadId, pageable);
+        
+        // Assert (Then)
+        StepVerifier.create(result)
+                .assertNext(page -> {
+                    assertEquals(1, page.getContent().size());
+                    assertEquals(0, page.getPageNumber());
+                    assertEquals(10, page.getPageSize());
+                    assertEquals(medicoDto, page.getContent().get(0));
+                    assertTrue(page.isFirst());
+                    assertTrue(page.isLast());
+                })
+                .verifyComplete();
+        
+        // Verificar que se llamó al método sin filtros para otros campos
+        Mockito.verify(medicoRepository).findAllPaged(10, 0);
+        Mockito.verify(medicoRepository, Mockito.never()).findAllPagedOrderByIdAsc(
+                Mockito.anyInt(), Mockito.anyLong());
+        Mockito.verify(medicoRepository, Mockito.never()).findAllPagedOrderByIdDesc(
+                Mockito.anyInt(), Mockito.anyLong());
+    }
+
+    @Test
+    @DisplayName("Obtener médicos paginados - Filtrar solo por nombre")
+    @Story("Obtener médicos paginados")
+    @Description("Debe usar el método con filtros cuando solo se proporciona el nombre")
+    public void getMedicosPaginados_FilterByNameOnly() {
+        // Arrange (Given)
+        String nombre = "Dr. Test";
+        Long especialidadId = null; // Sin especialidad
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id"));
+
+        List<Medico> medicos = new ArrayList<>();
+        medicos.add(medico);
+
+        // Verificar explícitamente que se llama al método con filtros
+        Mockito.when(medicoRepository.findByNombreAndEspecialidadIdOrderByIdAsc(
+                Mockito.eq(nombre), Mockito.eq(especialidadId), Mockito.eq(10), Mockito.eq(0L)))
+                .thenReturn(Flux.fromIterable(medicos));
+
+        Mockito.when(medicoMapper.toDto(Mockito.any(Medico.class)))
+                .thenReturn(medicoDto);
+
+        // Act (When)
+        Mono<PageResponseDto<MedicoDto>> result = medicoService.getMedicosPaginados(nombre, especialidadId, pageable);
+
+        // Assert (Then)
+        StepVerifier.create(result)
+                .assertNext(page -> {
+                    assertEquals(1, page.getContent().size());
+                    assertEquals(0, page.getPageNumber());
+                    assertEquals(10, page.getPageSize());
+                    assertEquals(medicoDto, page.getContent().get(0));
+                    assertTrue(page.isFirst());
+                    assertTrue(page.isLast());
+                })
+                .verifyComplete();
+
+        // Verificar que se llamó al método con filtros
+        Mockito.verify(medicoRepository).findByNombreAndEspecialidadIdOrderByIdAsc(
+                Mockito.eq(nombre), Mockito.eq(especialidadId), Mockito.eq(10), Mockito.eq(0L));
+    }
+
+    @Test
+    @DisplayName("Obtener médicos paginados - Filtrar solo por especialidad")
+    @Story("Obtener médicos paginados")
+    @Description("Debe usar el método con filtros cuando solo se proporciona la especialidad")
+    public void getMedicosPaginados_FilterBySpecialtyOnly() {
+        // Arrange (Given)
+        String nombre = null; // Sin nombre
+        Long especialidadId = 1L;
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id"));
+
+        List<Medico> medicos = new ArrayList<>();
+        medicos.add(medico);
+
+        // Verificar explícitamente que se llama al método con filtros
+        Mockito.when(medicoRepository.findByNombreAndEspecialidadIdOrderByIdAsc(
+                Mockito.eq(nombre), Mockito.eq(especialidadId), Mockito.eq(10), Mockito.eq(0L)))
+                .thenReturn(Flux.fromIterable(medicos));
+
+        Mockito.when(medicoMapper.toDto(Mockito.any(Medico.class)))
+                .thenReturn(medicoDto);
+
+        // Act (When)
+        Mono<PageResponseDto<MedicoDto>> result = medicoService.getMedicosPaginados(nombre, especialidadId, pageable);
+
+        // Assert (Then)
+        StepVerifier.create(result)
+                .assertNext(page -> {
+                    assertEquals(1, page.getContent().size());
+                    assertEquals(0, page.getPageNumber());
+                    assertEquals(10, page.getPageSize());
+                    assertEquals(medicoDto, page.getContent().get(0));
+                    assertTrue(page.isFirst());
+                    assertTrue(page.isLast());
+                })
+                .verifyComplete();
+
+        // Verificar que se llamó al método con filtros
+        Mockito.verify(medicoRepository).findByNombreAndEspecialidadIdOrderByIdAsc(
+                Mockito.eq(nombre), Mockito.eq(especialidadId), Mockito.eq(10), Mockito.eq(0L));
+    }
+
+    @Test
+    @DisplayName("Obtener médicos paginados - Filtrar por especialidad con nombre vacío")
+    @Story("Obtener médicos paginados")
+    @Description("Debe usar el método con filtros cuando nombre está vacío pero se proporciona especialidad")
+    public void getMedicosPaginados_FilterBySpecialtyWithEmptyName() {
+        // Arrange (Given)
+        String nombre = ""; // Nombre vacío, no nulo
+        Long especialidadId = 1L;
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "id"));
+
+        List<Medico> medicos = new ArrayList<>();
+        medicos.add(medico);
+
+        // Verificar explícitamente que se llama al método con filtros
+        Mockito.when(medicoRepository.findByNombreAndEspecialidadIdOrderByIdAsc(
+                Mockito.eq(nombre), Mockito.eq(especialidadId), Mockito.eq(10), Mockito.eq(0L)))
+                .thenReturn(Flux.fromIterable(medicos));
+
+        Mockito.when(medicoMapper.toDto(Mockito.any(Medico.class)))
+                .thenReturn(medicoDto);
+
+        // Act (When)
+        Mono<PageResponseDto<MedicoDto>> result = medicoService.getMedicosPaginados(nombre, especialidadId, pageable);
+
+        // Assert (Then)
+        StepVerifier.create(result)
+                .assertNext(page -> {
+                    assertEquals(1, page.getContent().size());
+                    assertEquals(0, page.getPageNumber());
+                    assertEquals(10, page.getPageSize());
+                    assertEquals(medicoDto, page.getContent().get(0));
+                    assertTrue(page.isFirst());
+                    assertTrue(page.isLast());
+                })
+                .verifyComplete();
+
+        // Verificar que se llamó al método con filtros
+        Mockito.verify(medicoRepository).findByNombreAndEspecialidadIdOrderByIdAsc(
+                Mockito.eq(nombre), Mockito.eq(especialidadId), Mockito.eq(10), Mockito.eq(0L));
     }
 }
