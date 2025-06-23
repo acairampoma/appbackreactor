@@ -1,0 +1,15 @@
+# .github/CODEOWNERS
+# Reemplaza la funcionalidad de reviewers en dependabot.yml
+
+# Global owner para todas las dependencias
+* @acairampoma
+
+# Archivos específicos
+/.github/ @acairampoma
+/pom.xml @acairampoma
+/Dockerfile @acairampoma
+/docker-compose*.yml @acairampoma
+
+# Si tienes equipos específicos en el futuro
+# /src/main/java/ @acairampoma @backend-team
+# /src/test/ @acairampoma @qa-team

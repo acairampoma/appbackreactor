@@ -7,12 +7,16 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "09:00"
+      timezone: "America/Bogota"  # 🆕 Añadido
     open-pull-requests-limit: 5
-    reviewers:
-      - "acairampoma"  # Tu usuario GitHub
+    # reviewers:  # ⚠️ DEPRECADO - usar CODEOWNERS
+    #   - "acairampoma"
+    assignees:  # 🆕 Reemplazo para reviewers
+      - "acairampoma"
     commit-message:
       prefix: "deps"
       include: "scope"
+    # 🆕 Mejorado: Más grupos y opciones
     groups:
       spring:
         patterns:
@@ -25,19 +29,56 @@ updates:
           - "*junit*"
           - "*allure*"
           - "*jacoco*"
+          - "*mockito*"  # 🆕 Añadido
+          - "*testcontainers*"  # 🆕 Añadido
         update-types:
           - "minor"
           - "patch"
+      reactive:  # 🆕 Para tu stack reactivo
+        patterns:
+          - "io.projectreactor*"
+          - "*r2dbc*"
+        update-types:
+          - "minor"
+          - "patch"
+      database:  # 🆕 Para PostgreSQL
+        patterns:
+          - "*postgresql*"
+          - "*h2*"
+        update-types:
+          - "minor"
+          - "patch"
+    # 🆕 Labels para organizar
+    labels:
+      - "dependencies"
+      - "java"
+      - "automated"
+    # 🆕 Ignorar major updates automáticamente
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
   # GitHub Actions dependencies
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+      timezone: "America/Bogota"  # 🆕 Añadido
     open-pull-requests-limit: 3
+    assignees:  # 🆕 Añadido
+      - "acairampoma"
+    labels:  # 🆕 Añadido
+      - "dependencies"
+      - "github-actions"
 
-  # Docker dependencies (si tienes Dockerfile)
+  # Docker dependencies
   - package-ecosystem: "docker"
     directory: "/"
     schedule:
       interval: "weekly"
+      timezone: "America/Bogota"  # 🆕 Añadido
+    assignees:  # 🆕 Añadido
+      - "acairampoma"
+    labels:  # 🆕 Añadido
+      - "dependencies"
+      - "docker"
